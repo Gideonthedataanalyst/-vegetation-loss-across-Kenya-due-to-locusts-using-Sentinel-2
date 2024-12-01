@@ -1,0 +1,1 @@
+# -vegetation-loss-across-Kenya-due-to-locusts-using-Sentinel-2
