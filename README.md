@@ -1,4 +1,4 @@
-# -vegetation-loss-across-Kenya-due-to-locusts-using-Sentinel-2
+# Vegetation-loss-across-Kenya-due-to-locusts-using-Sentinel-2
 
 Kenya Boundary: The boundary is used to clip Sentinel-2 data.
 NDVI Calculation: Computes NDVI for pre- and post-invasion periods.
