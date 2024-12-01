@@ -1,0 +1,45 @@
+// Step 1: Load Kenya boundary
+var kenya = ee.FeatureCollection('FAO/GAUL/2015/level0')
+              .filter(ee.Filter.eq('ADM0_NAME', 'Kenya'));
+Map.centerObject(kenya, 6);
+
+// Step 2: Load Sentinel-2 imagery
+var collection = ee.ImageCollection('COPERNICUS/S2')
+                  .filterBounds(kenya)
+                  .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 20));
+
+// Function to calculate NDVI
+var addNDVI = function(image) {
+  var ndvi = image.normalizedDifference(['B8', 'B4']).rename('NDVI');
+  return image.addBands(ndvi);
+};
+var collectionNDVI = collection.map(addNDVI);
+
+// Step 3: Define time periods
+// Before locust invasion
+var preInvasion = collectionNDVI.filterDate('2019-01-01', '2019-06-30').median()
+                                .clip(kenya);
+// After locust invasion
+var postInvasion = collectionNDVI.filterDate('2020-06-01', '2020-12-31').median()
+                                 .clip(kenya);
+
+// Step 4: Calculate NDVI Difference
+var ndviDifference = postInvasion.select('NDVI').subtract(preInvasion.select('NDVI'));
+
+// Step 5: Visualization
+var diffParams = {min: -0.5, max: 0.5, palette: ['red', 'white', 'green']};
+
+// Add layers to the map
+Map.addLayer(preInvasion.select('NDVI'), {min: 0, max: 1, palette: ['white', 'green']}, 'Pre-Invasion NDVI');
+Map.addLayer(postInvasion.select('NDVI'), {min: 0, max: 1, palette: ['white', 'green']}, 'Post-Invasion NDVI');
+Map.addLayer(ndviDifference, diffParams, 'NDVI Difference');
+
+// Step 6: Export NDVI Difference Map
+Export.image.toDrive({
+  image: ndviDifference,
+  description: 'Kenya_NDVI_Change',
+  scale: 100,
+  region: kenya.geometry(),
+  crs: 'EPSG:4326',
+  maxPixels: 1e13
+});
